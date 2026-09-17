@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    who VARCHAR(255) NOT NULL,
+    tg_chat_id BIGINT,
+    pass_hash VARCHAR(255),
+    is_registered BOOLEAN NOT NULL DEFAULT FALSE
+);

@@ -1,6 +1,5 @@
 package config
 
-
 import (
 	"log"
 	"os"
@@ -8,18 +7,21 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type Config struct{
+type Config struct {
 	DataBaseURL string
-	Port string
+	Port        string
 }
 
-func LoadConfig() (*Config, error){
-	var err error = godotenv.LoadConfig()
-	if err != nil{
+func LoadConfig() (*Config, error) {
+	err := godotenv.Load()
+	if err != nil {
 		log.Println(".env file not found")
 	}
-	var config *Config = &Config{
+
+	config := &Config{
 		DataBaseURL: os.Getenv("DB_URL"),
-		Port: os.Getenv("Port"),
+		Port:        os.Getenv("PORT"),
 	}
+
+	return config, nil
 }

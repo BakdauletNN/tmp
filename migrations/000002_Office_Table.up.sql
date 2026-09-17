@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS offices (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    star INT NOT NULL,
+    has_kitchen BOOLEAN NOT NULL DEFAULT FALSE,
+    time_range_work VARCHAR(100),
+    metro_near BOOLEAN NOT NULL DEFAULT FALSE
+);

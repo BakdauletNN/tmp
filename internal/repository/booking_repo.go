@@ -1,0 +1,131 @@
+package repository
+
+import (
+	"context"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"tmp/internal/models"
+)
+
+type BookingRepository struct {
+	Base
+}
+
+func NewBookingRepository(db *pgxpool.Pool) *BookingRepository {
+	return &BookingRepository{
+		Base: NewBase(db, "bookings"),
+	}
+}
+
+func (r *BookingRepository) WriteBooking(ctx context.Context, b *models.Booking) error {
+	query := `
+        INSERT INTO "bookings" 
+            (room_id, user_id, start_time, end_time)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id
+    `
+
+	return r.db.QueryRow(
+		ctx,
+		query,
+		b.RoomID,
+		b.UserID,
+		b.StartTime,
+		b.EndTime,
+	).Scan(&b.ID)
+}
+
+func (r *BookingRepository) GetBooking(ctx context.Context, id int) (*models.Booking, error) {
+	query := `
+        SELECT id, room_id, user_id, start_time, end_time
+        FROM "bookings"
+        WHERE id = $1
+    `
+
+	var b models.Booking
+
+	err := r.db.QueryRow(ctx, query, id).Scan(
+		&b.ID,
+		&b.RoomID,
+		&b.UserID,
+		&b.StartTime,
+		&b.EndTime,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &b, nil
+}
+
+func (r *BookingRepository) GetUserBookings(ctx context.Context, userID int) ([]models.Booking, error) {
+	query := `
+        SELECT id, room_id, user_id, start_time, end_time
+        FROM "bookings"
+        WHERE user_id = $1
+        ORDER BY start_time
+    `
+	rows, err := r.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var bookings []models.Booking
+
+	for rows.Next() {
+		var b models.Booking
+
+		err := rows.Scan(
+			&b.ID,
+			&b.RoomID,
+			&b.UserID,
+			&b.StartTime,
+			&b.EndTime,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		bookings = append(bookings, b)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return bookings, nil
+}
+
+func (r *BookingRepository) HasConflict(
+	ctx context.Context,
+	roomID int,
+	startTime time.Time,
+	endTime time.Time,
+) (bool, error) {
+
+	query := `
+        SELECT EXISTS (
+            SELECT 1
+            FROM bookings
+            WHERE room_id = $1
+              AND start_time < $3
+              AND end_time > $2
+        )
+    `
+
+	var exists bool
+
+	err := r.db.QueryRow(
+		ctx,
+		query,
+		roomID,
+		startTime,
+		endTime,
+	).Scan(&exists)
+
+	return exists, err
+}
