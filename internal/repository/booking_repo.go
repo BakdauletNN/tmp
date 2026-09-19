@@ -20,19 +20,14 @@ func NewBookingRepository(db *pgxpool.Pool) *BookingRepository {
 
 func (r *BookingRepository) WriteBooking(ctx context.Context, b *models.Booking) error {
 	query := `
-        INSERT INTO "bookings" 
-            (room_id, user_id, start_time, end_time)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id
-    `
-
+		INSERT INTO "bookings" 
+			(room_id, user_id, start_time, end_time, desk_id)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id
+	`
 	return r.db.QueryRow(
-		ctx,
-		query,
-		b.RoomID,
-		b.UserID,
-		b.StartTime,
-		b.EndTime,
+		ctx, query,
+		b.RoomID, b.UserID, b.StartTime, b.EndTime, b.DeskID,
 	).Scan(&b.ID)
 }
 
@@ -123,6 +118,37 @@ func (r *BookingRepository) HasConflict(
 		ctx,
 		query,
 		roomID,
+		startTime,
+		endTime,
+	).Scan(&exists)
+
+	return exists, err
+}
+
+
+func (r *BookingRepository) HasConflictDesk(
+	ctx context.Context,
+	DeskID int,
+	startTime time.Time,
+	endTime time.Time,
+) (bool, error) {
+
+	query := `
+        SELECT EXISTS (
+            SELECT 1
+            FROM bookings
+            WHERE desk_id = $1
+              AND start_time < $3
+              AND end_time > $2
+        )
+    `
+
+	var exists bool
+
+	err := r.db.QueryRow(
+		ctx,
+		query,
+		DeskID,
 		startTime,
 		endTime,
 	).Scan(&exists)

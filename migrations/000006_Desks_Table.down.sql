@@ -1,0 +1,2 @@
+ALTER TABLE bookings DROP COLUMN IF EXISTS desk_id;
+DROP TABLE IF EXISTS desks;

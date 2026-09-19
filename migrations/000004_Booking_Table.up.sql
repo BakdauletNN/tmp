@@ -5,3 +5,4 @@ CREATE TABLE IF NOT EXISTS bookings (
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL
 );
+

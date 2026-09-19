@@ -1,0 +1,24 @@
+package service
+
+import (
+	"context"
+
+	"tmp/internal/models"
+	"tmp/internal/repository"
+)
+
+type RoomService struct {
+	repo *repository.RoomRepository
+}
+
+func NewRoomService(repo *repository.RoomRepository) *RoomService {
+	return &RoomService{repo: repo}
+}
+
+func (s *RoomService) GetRoom(ctx context.Context, id int) (models.Room, error) {
+	return s.repo.GetInfoRoom(ctx, id)
+}
+
+func (s *RoomService) SetAccessCode(ctx context.Context, roomID, code int) error {
+	return s.repo.UpdateAccessCode(ctx, roomID, code)
+}

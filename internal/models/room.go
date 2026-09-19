@@ -11,3 +11,11 @@ type Room struct {
 	HasAirConditioner bool    `json:"has_air_conditioner" db:"has_air_conditioner"`
 	HasPrayerRoom     bool    `json:"has_prayer_room" db:"has_prayer_room"`
 }
+
+type RoomFilter struct {
+	OfficeID          int     `form:"office_id"`
+	Type              string  `form:"type"`
+	MaxPriceHour      float64 `form:"max_price_hour"`
+	MinQtyPerson      int     `form:"min_qty_person"`
+	HasAirConditioner *bool   `form:"has_air_conditioner"`
+}
