@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/gin-contrib/cors"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"tmp/internal/config"
@@ -50,13 +50,14 @@ func main() {
 	bookingHandler := http.NewBookingHandler(bookingService)
 
 	router := gin.Default()
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{"GET", "POST", "PATCH", "DELETE"},
+		AllowHeaders: []string{"Authorization", "Content-Type"},
+	}))
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message":   "Start succes code 200",
-			"status_db": "connected",
-		})
-	})
 
 	authHandler.RegisterRoutes(router)
 	roomHandler.RegisterRoutes(router)
@@ -65,6 +66,8 @@ func main() {
 	protected := router.Group("/")
 	protected.Use(middleware.JWTAuth(cfg.JWT_SECRET))
 	bookingHandler.RegisterRoutes(protected)
+
+	
 
 	router.Run(":" + cfg.Port)
 }

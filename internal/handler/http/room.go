@@ -1,9 +1,10 @@
 package http
 
 import (
-	"strconv"
 	"net/http"
+	"strconv"
 
+	"tmp/internal/models"
 	"tmp/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -17,9 +18,30 @@ func NewRoomHanlder(s *service.RoomService) *RoomHandler{
 	return &RoomHandler{service: s}
 }
 
-func (h *RoomHandler) RegisterRoutes(router *gin.Engine){
-	router.GET("/room")
+func (h *RoomHandler) RegisterRoutes(router *gin.Engine) {
+	router.GET("/rooms", h.SearchRoom)    
 	router.GET("/rooms/:id", h.GetRoomInfo)
+}
+
+func (h *RoomHandler) SearchRoom(c *gin.Context) {
+	var filter models.RoomFilter
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	rooms, err := h.service.SearchRoom(c.Request.Context(), &filter)  
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(rooms) == 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "no rooms found", "rooms": []models.Room{}}) 
+		return
+	}
+
+	c.JSON(http.StatusOK, rooms)
 }
 
 func (h *RoomHandler) GetRoomInfo(c *gin.Context) {
@@ -65,3 +87,5 @@ func (h *RoomHandler) SetCode(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "code updated"})
 }
+
+

@@ -22,3 +22,7 @@ func (s *RoomService) GetRoom(ctx context.Context, id int) (models.Room, error) 
 func (s *RoomService) SetAccessCode(ctx context.Context, roomID, code int) error {
 	return s.repo.UpdateAccessCode(ctx, roomID, code)
 }
+
+func (s *RoomService) SearchRoom(ctx context.Context, filter *models.RoomFilter) ([]models.Room, error) {
+	return s.repo.SearchRoom(ctx, filter)
+}

@@ -60,3 +60,8 @@ func (s *BookingService) CreateBooking(ctx context.Context, userID, roomID int, 
 func (s *BookingService) GetUserBookings(ctx context.Context, userID int) ([]models.Booking, error) {
 	return s.repo.GetUserBookings(ctx, userID)
 }
+
+// booking_s.go — добавь метод
+func (s *BookingService) CancelBooking(ctx context.Context, bookingID, userID int) error {
+	return s.repo.DeleteBooking(ctx, bookingID, userID)
+}

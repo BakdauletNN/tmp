@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"time"
-
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"tmp/internal/models"
 )
@@ -33,35 +33,27 @@ func (r *BookingRepository) WriteBooking(ctx context.Context, b *models.Booking)
 
 func (r *BookingRepository) GetBooking(ctx context.Context, id int) (*models.Booking, error) {
 	query := `
-        SELECT id, room_id, user_id, start_time, end_time
-        FROM "bookings"
-        WHERE id = $1
-    `
-
+		SELECT id, room_id, user_id, desk_id, start_time, end_time
+		FROM "bookings"
+		WHERE id = $1
+	`
 	var b models.Booking
-
 	err := r.db.QueryRow(ctx, query, id).Scan(
-		&b.ID,
-		&b.RoomID,
-		&b.UserID,
-		&b.StartTime,
-		&b.EndTime,
+		&b.ID, &b.RoomID, &b.UserID, &b.DeskID, &b.StartTime, &b.EndTime,
 	)
-
 	if err != nil {
 		return nil, err
 	}
-
 	return &b, nil
 }
 
 func (r *BookingRepository) GetUserBookings(ctx context.Context, userID int) ([]models.Booking, error) {
 	query := `
-        SELECT id, room_id, user_id, start_time, end_time
-        FROM "bookings"
-        WHERE user_id = $1
-        ORDER BY start_time
-    `
+		SELECT id, room_id, user_id, desk_id, start_time, end_time
+		FROM "bookings"
+		WHERE user_id = $1
+		ORDER BY start_time
+	`
 	rows, err := r.db.Query(ctx, query, userID)
 	if err != nil {
 		return nil, err
@@ -69,30 +61,14 @@ func (r *BookingRepository) GetUserBookings(ctx context.Context, userID int) ([]
 	defer rows.Close()
 
 	var bookings []models.Booking
-
 	for rows.Next() {
 		var b models.Booking
-
-		err := rows.Scan(
-			&b.ID,
-			&b.RoomID,
-			&b.UserID,
-			&b.StartTime,
-			&b.EndTime,
-		)
-
-		if err != nil {
+		if err := rows.Scan(&b.ID, &b.RoomID, &b.UserID, &b.DeskID, &b.StartTime, &b.EndTime); err != nil {
 			return nil, err
 		}
-
 		bookings = append(bookings, b)
 	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return bookings, nil
+	return bookings, rows.Err()
 }
 
 func (r *BookingRepository) HasConflict(
@@ -154,4 +130,17 @@ func (r *BookingRepository) HasConflictDesk(
 	).Scan(&exists)
 
 	return exists, err
+}
+
+
+func (r *BookingRepository) DeleteBooking(ctx context.Context, id, userID int) error {
+	query := `DELETE FROM bookings WHERE id = $1 AND user_id = $2`
+	cmdTag, err := r.db.Exec(ctx, query, id, userID)
+	if err != nil {
+		return err
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return pgx.ErrNoRows 
+	}
+	return nil
 }

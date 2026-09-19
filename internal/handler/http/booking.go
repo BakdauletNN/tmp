@@ -6,7 +6,7 @@ import (
 	"tmp/internal/middleware"
 	"tmp/internal/models"
 	"tmp/internal/service"
-	
+	"strconv"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,6 +21,7 @@ func NewBookingHandler(s *service.BookingService) *BookingHandler {
 func (h *BookingHandler) RegisterRoutes(router *gin.RouterGroup) {
 	router.GET("/bookings", h.Bookings)
 	router.POST("/create_booking", h.CreateBooking)
+	router.DELETE("/bookings/:id", h.CancelBooking)   
 }
 
 func (h *BookingHandler) Bookings(c *gin.Context) {
@@ -73,3 +74,23 @@ func (h *BookingHandler) CreateBooking(c *gin.Context) {
 	})
 }
 
+func (h *BookingHandler) CancelBooking(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid booking id"})
+		return
+	}
+
+	if err := h.service.CancelBooking(c.Request.Context(), id, userID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "booking not found or not yours"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "booking cancelled"})
+}
