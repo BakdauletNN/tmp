@@ -9,6 +9,7 @@ import (
 )
 
 const userCtxKey = "user_id"
+const roleCtxKey = "role"
 
 // ParseToken checks signature
 func ParseToken(tokenStr, secret string) (*jwt.Token, error) {
@@ -34,6 +35,7 @@ func JWTAuth(secret string) gin.HandlerFunc {
 
 		claims := token.Claims.(jwt.MapClaims)
 		c.Set(userCtxKey, int(claims["user_id"].(float64)))
+		c.Set(roleCtxKey, claims["role"].(string))
 		c.Next()
 	}
 }
@@ -44,4 +46,18 @@ func GetUserID(c *gin.Context) (int, bool) {
 		return 0, false
 	}
 	return v.(int), true
+}
+
+
+func GetRole(c *gin.Context) (string, bool) {
+	v, ok := c.Get(roleCtxKey)
+	if !ok {
+		return "", false
+	}
+	return v.(string), true
+}
+
+func IsAdmin(c *gin.Context) bool {
+	role, ok := GetRole(c)
+	return ok && role == "admin"
 }

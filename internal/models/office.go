@@ -8,6 +8,7 @@ type Office struct {
 	HasKitchen    bool   `json:"has_kitchen" db:"has_kitchen"`
 	TimeRangeWork string `json:"time_range_work" db:"time_range_work"`
 	MetroNear     bool   `json:"metro_near" db:"metro_near"`
+	OwnerID       int    `json:"owner_id" db:"owner_id"`
 }
 
 

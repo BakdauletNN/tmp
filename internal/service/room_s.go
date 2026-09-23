@@ -15,8 +15,15 @@ func NewRoomService(repo *repository.RoomRepository) *RoomService {
 	return &RoomService{repo: repo}
 }
 
-func (s *RoomService) GetRoom(ctx context.Context, id int) (models.Room, error) {
-	return s.repo.GetInfoRoom(ctx, id)
+func (s *RoomService) GetRoom(ctx context.Context, id int, isAdmin bool) (models.Room, error) {
+	room, err := s.repo.GetInfoRoom(ctx, id)
+	if err != nil {
+		return room, err
+	}
+	if !isAdmin {
+		room.AccessCode = nil
+	}
+	return room, nil
 }
 
 func (s *RoomService) SetAccessCode(ctx context.Context, roomID, code int) error {

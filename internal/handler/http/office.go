@@ -6,6 +6,7 @@ import (
 	"tmp/internal/service"
 	"strconv"
 	"github.com/gin-gonic/gin"
+	"tmp/internal/middleware"
 )
 
 
@@ -50,7 +51,8 @@ func (h *OfficeHandler) GetOffice(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid office id"})
 		return
 	}
-	office, err := h.service.GetOffice(c.Request.Context(), id)
+	isAdmin := middleware.IsAdmin(c)
+	office, err := h.service.GetOffice(c.Request.Context(), id, isAdmin)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "office not found"})
 		return

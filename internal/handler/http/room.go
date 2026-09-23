@@ -6,7 +6,7 @@ import (
 
 	"tmp/internal/models"
 	"tmp/internal/service"
-
+	"tmp/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -52,7 +52,8 @@ func (h *RoomHandler) GetRoomInfo(c *gin.Context) {
 		return
 	}
 
-	room, err := h.service.GetRoom(c.Request.Context(), id)
+	isAdmin := middleware.IsAdmin(c)
+	room, err := h.service.GetRoom(c.Request.Context(), id, isAdmin)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "room not found"})
 		return

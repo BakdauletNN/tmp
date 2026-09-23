@@ -14,6 +14,7 @@ import (
 	"tmp/internal/repository"
 	"tmp/internal/service"
 	_ "tmp/docs"
+	"tmp/internal/admin"
 )
 
 // @title           CoworkGo API
@@ -49,6 +50,7 @@ func main() {
 	bookingService := service.NewBookingService(bookingRepo, roomRepo)
 	bookingHandler := http.NewBookingHandler(bookingService)
 
+
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
@@ -66,6 +68,11 @@ func main() {
 	protected := router.Group("/")
 	protected.Use(middleware.JWTAuth(cfg.JWT_SECRET))
 	bookingHandler.RegisterRoutes(protected)
+
+
+	adminRepo := admin.NewAdminRepository(pool)
+	adminHandler := admin.NewAdminHandler(adminRepo)
+	adminHandler.RegisterRoutes(protected) 
 
 	
 

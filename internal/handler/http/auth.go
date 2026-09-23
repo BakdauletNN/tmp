@@ -1,5 +1,5 @@
 //test: {
-  //.  "email": "testemail01@mail.kz",
+  //.  "email"testemail01@mail.kz: "",
   //.   "password": "iitukz"
 //}
 
