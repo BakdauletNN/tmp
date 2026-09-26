@@ -38,15 +38,13 @@ definitions:
         type: string
       pass_hash:
         type: string
-      tg_chat_id:
-        type: integer
       who:
         type: string
     type: object
 host: localhost:8080
 info:
   contact: {}
-  description: REST API для бронирования коворкингов
+  description: REST API for coworking space bookings
   title: CoworkGo API
   version: "1.0"
 paths:
@@ -54,7 +52,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Создаёт нового пользователя
+      description: Creates a new user
       parameters:
       - description: SignIn Data
         in: body
@@ -77,16 +75,16 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Регистрация пользователя
+      summary: Register a user
       tags:
       - auth
   /register:
     post:
       consumes:
       - application/json
-      description: Создаёт нового пользователя
+      description: Creates a new user
       parameters:
-      - description: Данные регистрации
+      - description: Registration data
         in: body
         name: input
         required: true
@@ -105,7 +103,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Регистрация пользователя
+      summary: Register a user
       tags:
       - auth
 swagger: "2.0"

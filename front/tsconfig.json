@@ -7,6 +7,7 @@
     "skipLibCheck": true,
 
     "moduleResolution": "bundler",
+    "jsx": "react-jsx",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -17,5 +18,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src/main.tsx", "src/App.tsx", "src/api.ts", "src/types.ts", "src/vite-env.d.ts"]
 }

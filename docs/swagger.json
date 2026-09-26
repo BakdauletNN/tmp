@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "REST API для бронирования коворкингов",
+        "description": "REST API for coworking space bookings",
         "title": "CoworkGo API",
         "contact": {},
         "version": "1.0"
@@ -11,7 +11,7 @@
     "paths": {
         "/login": {
             "post": {
-                "description": "Создаёт нового пользователя",
+                "description": "Creates a new user",
                 "consumes": [
                     "application/json"
                 ],
@@ -21,7 +21,7 @@
                 "tags": [
                     "auth"
                 ],
-                "summary": "Регистрация пользователя",
+                "summary": "Register a user",
                 "parameters": [
                     {
                         "description": "SignIn Data",
@@ -57,7 +57,7 @@
         },
         "/register": {
             "post": {
-                "description": "Создаёт нового пользователя",
+                "description": "Creates a new user",
                 "consumes": [
                     "application/json"
                 ],
@@ -67,10 +67,10 @@
                 "tags": [
                     "auth"
                 ],
-                "summary": "Регистрация пользователя",
+                "summary": "Register a user",
                 "parameters": [
                     {
-                        "description": "Данные регистрации",
+                        "description": "Registration data",
                         "name": "input",
                         "in": "body",
                         "required": true,
@@ -154,9 +154,6 @@
                 },
                 "pass_hash": {
                     "type": "string"
-                },
-                "tg_chat_id": {
-                    "type": "integer"
                 },
                 "who": {
                     "type": "string"

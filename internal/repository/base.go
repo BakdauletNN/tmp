@@ -47,7 +47,7 @@ func (r *Base) Exists(ctx context.Context, id int) (bool, error) {
 	return exists, nil
 }
 
-// Count возвращает общее количество записей
+// Count returns the total number of records
 func (r *Base) Count(ctx context.Context) (int, error) {
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", pgx.Identifier{r.tableName}.Sanitize())
 

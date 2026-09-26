@@ -1,122 +1,75 @@
-import { getToken } from './auth';
-import type {
-  AuthResponse,
-  Booking,
-  CreateBookingPayload,
-  CreateBookingResponse,
-  Office,
-  OfficeFilters,
-  Room,
-  RoomFilters,
-  User,
-} from './types';
+import type { AdminUser, Booking, CreateBookingBody, Desk, Office, Room } from './types';
 
-const API_BASE = 'http://localhost:8080';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
-/** Ошибка запроса к API. Сообщение — ровно то, что вернул бэкенд в поле "error". */
 export class ApiError extends Error {
-  status: number;
-  constructor(message: string, status: number) {
+  constructor(public status: number, message: string) {
     super(message);
-    this.status = status;
   }
 }
 
-function buildQuery(params: Record<string, unknown> | undefined): string {
-  if (!params) return '';
-  const search = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) {
-    if (value === undefined || value === null || value === '') continue;
-    search.set(key, String(value));
-  }
-  const query = search.toString();
-  return query ? `?${query}` : '';
-}
-
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken();
-  const headers = new Headers(options.headers);
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers);
   headers.set('Content-Type', 'application/json');
+  const token = localStorage.getItem('coworkgo-token');
   if (token) headers.set('Authorization', `Bearer ${token}`);
-
   let response: Response;
   try {
-    response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    response = await fetch(`${API_BASE}${path}`, { ...init, headers });
   } catch {
-    throw new ApiError('Не удалось соединиться с сервером. Проверьте, что бэкенд запущен.', 0);
+    throw new ApiError(0, `Could not connect to the server ${API_BASE}`);
   }
-
-  const raw = await response.text();
-  const data = raw ? safeJsonParse(raw) : null;
-
+  const data: unknown = await response.json().catch(() => null);
   if (!response.ok) {
-    const message =
-      data && typeof data === 'object' && typeof (data as { error?: unknown }).error === 'string'
-        ? (data as { error: string }).error
-        : `Ошибка запроса (${response.status})`;
-    throw new ApiError(message, response.status);
+    const raw = (data as { error?: string } | null)?.error;
+    const messages: Record<string, string> = {
+      'place already booked': 'This time slot is already taken. Choose a different interval.',
+      unauthorized: 'Please sign in to continue.',
+      'invalid token': 'Your session has ended. Please sign in again.',
+    };
+    throw new ApiError(response.status, messages[raw ?? ''] ?? raw ?? `Error ${response.status}`);
   }
-
   return data as T;
 }
 
-function safeJsonParse(raw: string): unknown {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+function list<T>(data: T[] | { offices?: T[]; rooms?: T[] } | null, key: 'offices' | 'rooms'): T[] {
+  if (Array.isArray(data)) return data;
+  return data?.[key] ?? [];
 }
 
-// ---- Авторизация ----
-
-export function register(name: string, email: string, password: string): Promise<User> {
-  return request<User>('/register', {
-    method: 'POST',
-    body: JSON.stringify({ name, email, password }),
+function query(values: Record<string, string | number | boolean | undefined>): string {
+  const params = new URLSearchParams();
+  Object.entries(values).forEach(([key, value]) => {
+    if (value !== undefined && value !== '' && value !== false) params.set(key, String(value));
   });
+  const encoded = params.toString();
+  return encoded ? `?${encoded}` : '';
 }
 
-export function login(email: string, password: string): Promise<AuthResponse> {
-  return request<AuthResponse>('/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  });
-}
-
-// ---- Коворкинги ----
-
-export function getOffices(filters?: OfficeFilters): Promise<Office[]> {
-  return request<Office[]>(`/offices${buildQuery(filters as Record<string, unknown>)}`);
-}
-
-export function getOffice(id: number): Promise<Office> {
-  return request<Office>(`/offices/${id}`);
-}
-
-// ---- Комнаты ----
-
-export function getRooms(filters?: RoomFilters): Promise<Room[]> {
-  return request<Room[]>(`/rooms${buildQuery(filters as Record<string, unknown>)}`);
-}
-
-export function getRoom(id: number): Promise<Room> {
-  return request<Room>(`/rooms/${id}`);
-}
-
-// ---- Брони (требуют JWT — токен подставляется в request() автоматически) ----
-
-export function getBookings(): Promise<Booking[]> {
-  return request<Booking[]>('/bookings');
-}
-
-export function createBooking(payload: CreateBookingPayload): Promise<CreateBookingResponse> {
-  return request<CreateBookingResponse>('/create_booking', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-export function deleteBooking(id: number): Promise<{ message: string }> {
-  return request<{ message: string }>(`/bookings/${id}`, { method: 'DELETE' });
-}
+export const api = {
+  offices: async (filters: Record<string, string | number | boolean | undefined> = {}) =>
+    list(await request<Office[] | { offices?: Office[] }>('/offices' + query(filters)), 'offices'),
+  office: (id: number) => request<Office>(`/offices/${id}`),
+  rooms: async (filters: Record<string, string | number | boolean | undefined> = {}) =>
+    list(await request<Room[] | { rooms?: Room[] }>('/rooms' + query(filters)), 'rooms'),
+  room: (id: number) => request<Room>(`/rooms/${id}`),
+  desks: (roomId: number, start: string, end: string) => request<Desk[]>(
+    `/rooms/${roomId}/desks` + query({ start_time: start, end_time: end }),
+  ),
+  bookings: async () => (await request<Booking[] | null>('/bookings')) ?? [],
+  createBooking: (body: CreateBookingBody) =>
+    request<{ booking: Booking }>('/create_booking', { method: 'POST', body: JSON.stringify(body) }),
+  cancelBooking: (id: number) => request<{ message: string }>(`/bookings/${id}`, { method: 'DELETE' }),
+  login: (email: string, password: string) =>
+    request<{ token: string }>('/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (name: string, email: string, password: string) =>
+    request<{ id: number; name: string; email: string }>('/register', { method: 'POST', body: JSON.stringify({ name, email, password }) }),
+  forgotPassword: (email: string) =>
+    request<{ message: string }>('/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+  resetPassword: (token: string, password: string) =>
+    request<{ message: string }>('/reset-password', { method: 'POST', body: JSON.stringify({ token, password }) }),
+  adminOffices: async () => (await request<Office[] | null>('/admin/offices')) ?? [],
+  adminBookings: async () => (await request<Booking[] | null>('/admin/bookings')) ?? [],
+  adminUsers: async () => (await request<AdminUser[] | null>('/admin/users')) ?? [],
+  adminCancelBooking: (id: number) => request<{ message: string }>(`/admin/bookings/${id}`, { method: 'DELETE' }),
+};

@@ -1,0 +1,1 @@
+ALTER TABLE bookings ADD COLUMN public_code VARCHAR(32) UNIQUE;

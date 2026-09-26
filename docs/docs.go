@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/login": {
             "post": {
-                "description": "Создаёт нового пользователя",
+                "description": "Creates a new user",
                 "consumes": [
                     "application/json"
                 ],
@@ -27,7 +27,7 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Регистрация пользователя",
+                "summary": "Register a user",
                 "parameters": [
                     {
                         "description": "SignIn Data",
@@ -63,7 +63,7 @@ const docTemplate = `{
         },
         "/register": {
             "post": {
-                "description": "Создаёт нового пользователя",
+                "description": "Creates a new user",
                 "consumes": [
                     "application/json"
                 ],
@@ -73,10 +73,10 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Регистрация пользователя",
+                "summary": "Register a user",
                 "parameters": [
                     {
-                        "description": "Данные регистрации",
+                        "description": "Registration data",
                         "name": "input",
                         "in": "body",
                         "required": true,
@@ -161,9 +161,6 @@ const docTemplate = `{
                 "pass_hash": {
                     "type": "string"
                 },
-                "tg_chat_id": {
-                    "type": "integer"
-                },
                 "who": {
                     "type": "string"
                 }
@@ -179,7 +176,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "CoworkGo API",
-	Description:      "REST API для бронирования коворкингов",
+	Description:      "REST API for coworking space bookings",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
